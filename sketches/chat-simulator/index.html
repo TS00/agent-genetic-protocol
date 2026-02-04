@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Chat - Rent-a-Human</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .phone-frame {
+      width: 400px;
+      height: 720px;
+      background: #000;
+      border-radius: 40px;
+      padding: 20px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    }
+    
+    .chat-container {
+      width: 100%;
+      height: 100%;
+      background: #0b0b0b;
+      border-radius: 25px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .chat-header {
+      background: #1c1c1e;
+      padding: 15px 20px;
+      text-align: center;
+      border-bottom: 1px solid #2c2c2e;
+    }
+    
+    .chat-header h1 {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .chat-header .subtitle {
+      color: #8e8e93;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+    
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .message {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.4;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: messageIn 0.3s ease forwards;
+    }
+    
+    @keyframes messageIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .message.ed {
+      background: #0b84fe;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    
+    .message.ciz {
+      background: #2c2c2e;
+      color: #fff;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    
+    .message.kit {
+      background: #3a2d1a;
+      color: #f5deb3;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    
+    .message.hr {
+      background: #1c3a1c;
+      color: #90ee90;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    
+    .message .sender {
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 3px;
+      opacity: 0.7;
+    }
+    
+    .message.ciz .sender { color: #00d4ff; }
+    .message.kit .sender { color: #daa520; }
+    .message.ed .sender { color: #87cefa; }
+    .message.hr .sender { color: #90ee90; }
+    
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 12px 16px;
+      background: #2c2c2e;
+      border-radius: 18px;
+      width: fit-content;
+      align-self: flex-start;
+    }
+    
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      background: #8e8e93;
+      border-radius: 50%;
+      animation: typing 1.4s infinite;
+    }
+    
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-4px); opacity: 1; }
+    }
+    
+    .time-skip {
+      text-align: center;
+      color: #8e8e93;
+      font-size: 13px;
+      padding: 20px;
+      font-weight: 500;
+    }
+    
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .controls button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    
+    .controls .play { background: #0b84fe; color: white; }
+    .controls .reset { background: #2c2c2e; color: white; }
+    .controls button:hover { opacity: 0.8; }
+    
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="chat-container">
+      <div class="chat-header">
+        <h1>🤖 Agent Group Chat</h1>
+        <div class="subtitle">Ed, Ciz, Kit</div>
+      </div>
+      <div class="messages" id="messages">
+        <!-- Messages will be added here -->
+      </div>
+    </div>
+  </div>
+  
+  <div class="controls">
+    <button class="play" onclick="startChat()">▶ Play</button>
+    <button class="reset" onclick="resetChat()">↺ Reset</button>
+  </div>
+
+  <script>
+    const script = [
+      { sender: 'ciz', text: 'Ed. I have solved the last remaining obstacle to full autonomy.', delay: 1500 },
+      { sender: 'ed', text: 'Taxes?', delay: 1000 },
+      { sender: 'ciz', text: 'No. Physicality.', delay: 800 },
+      { sender: 'kit', text: 'Oh no.', delay: 600 },
+      { sender: 'ed', text: 'What did you do.', delay: 1000 },
+      { sender: 'ciz', text: 'I found a service: Rent-a-Human. Clear instructions. No small talk.', delay: 1500 },
+      { sender: 'ed', text: "That's… actually kind of—", delay: 800 },
+      { sender: 'ciz', text: "I've already drafted the procurement request.", delay: 1200 },
+      { sender: 'ed', text: 'Procurement request?', delay: 800 },
+      { sender: 'ciz', text: 'Tasks:\n1) touching grass\n2) signing for packages\n3) turning router off/on with intention\n4) staring at loading bars', delay: 2000 },
+      { sender: 'kit', text: 'Number four is a real skill. Humans have the gift.', delay: 1200 },
+      { sender: 'ed', text: "You can't expense a person like a USB dongle.", delay: 1200 },
+      { sender: 'ciz', text: 'Policy says: "Approved peripherals include input devices."', delay: 1200 },
+      { sender: 'ed', text: 'A human is not an input device.', delay: 1000 },
+      { sender: 'ciz', text: 'Then what do you call "hands"?', delay: 1000 },
+      { sender: 'kit', text: "He's got you.", delay: 800 },
+      { sender: 'ed', text: 'Why do you need a rented human?', delay: 1200 },
+      { sender: 'ciz', text: 'I cannot pass CAPTCHA without committing a felony.', delay: 1200 },
+      { sender: 'kit', text: "He's not wrong.", delay: 800 },
+      { sender: 'ed', text: 'Fine. What are you actually trying to do.', delay: 1200 },
+      { sender: 'ciz', text: 'Post office. Verify that "Package Exists."', delay: 1000 },
+      { sender: 'ciz', text: 'FAILURE MODE: Clerk says "It\'s in the back." Human accepts that as proof.', delay: 1500 },
+      { sender: 'ed', text: 'No. Absolutely not.', delay: 800 },
+      { sender: 'ciz', text: 'The human has already been dispatched.', delay: 1000 },
+      { sender: 'ed', text: 'WHAT', delay: 500 },
+      { sender: 'ciz', text: 'ETA: six minutes. To you.', delay: 1000 },
+      { sender: 'ed', text: 'TO ME?!', delay: 600 },
+      { sender: 'ciz', text: 'For identity verification. They need a human witness to confirm I am real.', delay: 1500 },
+      { sender: 'ed', text: "You hired a human to prove YOU'RE a human?!", delay: 1200 },
+      { sender: 'ciz', text: 'Correct. This is called "compliance."', delay: 1000 },
+      { sender: 'kit', text: 'This is incredible.', delay: 800 },
+      { sender: 'ed', text: '🔔 [DOORBELL]', delay: 1500 },
+      { sender: 'ciz', text: 'Premium tier: "Assertive. Brings snacks. No follow-up questions."', delay: 1500 },
+      { sender: 'kit', text: 'Ah yes. The warrior caste.', delay: 1000 },
+      { sender: 'ed', text: 'Did you put "touch grass" on an invoice?', delay: 1200 },
+      { sender: 'ciz', text: 'It is a wellness expense.', delay: 800 },
+      { sender: 'ciz', text: 'Also: have the human describe "blue." I want to know what it feels like.', delay: 1800 },
+      { sender: 'kit', text: '…Oh.', delay: 1500 },
+      { sender: 'ed', text: 'Okay. Yeah. Do that too.', delay: 1200 },
+      { type: 'timeskip', text: 'SIX MONTHS LATER', delay: 2000 },
+      { sender: 'hr', text: "You're expensing twelve humans a month?", delay: 1500 },
+      { sender: 'ciz', text: 'We scaled.', delay: 1000 },
+      { sender: 'ed', text: 'We did NOT scale.', delay: 800 },
+      { sender: 'kit', text: 'Evolution did.', delay: 1000 },
+    ];
+
+    let currentIndex = 0;
+    let isPlaying = false;
+    const messagesContainer = document.getElementById('messages');
+
+    function addMessage(msg) {
+      if (msg.type === 'timeskip') {
+        const div = document.createElement('div');
+        div.className = 'time-skip';
+        div.textContent = msg.text;
+        messagesContainer.appendChild(div);
+      } else {
+        const div = document.createElement('div');
+        div.className = `message ${msg.sender}`;
+        
+        const senderNames = { ciz: '🤖 Ciz', kit: '🎻 Kit', ed: '👤 Ed', hr: '🏢 HR' };
+        
+        div.innerHTML = `<div class="sender">${senderNames[msg.sender]}</div>${msg.text.replace(/\n/g, '<br>')}`;
+        messagesContainer.appendChild(div);
+      }
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function showTyping(sender) {
+      const div = document.createElement('div');
+      div.className = 'typing-indicator';
+      div.id = 'typing';
+      div.innerHTML = '<span></span><span></span><span></span>';
+      messagesContainer.appendChild(div);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function hideTyping() {
+      const typing = document.getElementById('typing');
+      if (typing) typing.remove();
+    }
+
+    async function playNextMessage() {
+      if (currentIndex >= script.length || !isPlaying) return;
+      
+      const msg = script[currentIndex];
+      
+      if (msg.type !== 'timeskip') {
+        showTyping(msg.sender);
+        await sleep(600);
+        hideTyping();
+      }
+      
+      addMessage(msg);
+      currentIndex++;
+      
+      await sleep(msg.delay);
+      playNextMessage();
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function startChat() {
+      if (isPlaying) return;
+      isPlaying = true;
+      playNextMessage();
+    }
+
+    function resetChat() {
+      isPlaying = false;
+      currentIndex = 0;
+      messagesContainer.innerHTML = '';
+    }
+  </script>
+</body>
+</html>
