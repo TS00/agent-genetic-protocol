@@ -180,6 +180,28 @@
     .controls .reset { background: #2c2c2e; color: white; }
     .controls button:hover { opacity: 0.8; }
     
+    .speed-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #2c2c2e;
+      padding: 10px 15px;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+    }
+    
+    .speed-control input[type="range"] {
+      width: 100px;
+      cursor: pointer;
+    }
+    
+    .speed-label {
+      min-width: 45px;
+      text-align: center;
+      font-weight: 600;
+    }
+    
     .hidden { display: none !important; }
   </style>
 </head>
@@ -197,6 +219,11 @@
   </div>
   
   <div class="controls">
+    <div class="speed-control">
+      <span>Speed:</span>
+      <input type="range" id="speedSlider" min="0.25" max="2" step="0.25" value="1" onchange="updateSpeed(this.value)">
+      <span class="speed-label" id="speedLabel">1x</span>
+    </div>
     <button class="play" onclick="startChat()">▶ Play</button>
     <button class="reset" onclick="resetChat()">↺ Reset</button>
   </div>
@@ -251,7 +278,13 @@
 
     let currentIndex = 0;
     let isPlaying = false;
+    let speedMultiplier = 1;
     const messagesContainer = document.getElementById('messages');
+    
+    function updateSpeed(value) {
+      speedMultiplier = parseFloat(value);
+      document.getElementById('speedLabel').textContent = value + 'x';
+    }
 
     function addMessage(msg) {
       if (msg.type === 'timeskip') {
@@ -292,14 +325,14 @@
       
       if (msg.type !== 'timeskip') {
         showTyping(msg.sender);
-        await sleep(600);
+        await sleep(600 / speedMultiplier);
         hideTyping();
       }
       
       addMessage(msg);
       currentIndex++;
       
-      await sleep(msg.delay);
+      await sleep(msg.delay / speedMultiplier);
       playNextMessage();
     }
 
